@@ -126,8 +126,18 @@ void startAdv(void)
   Bluefruit.Advertising.start(30);               // 0 = Don't stop advertising after n seconds
 }
 
+char keys[6]="";
+uint8_t keycount=0;
+
+/* Function to scan key matrix and return the keys pressed */
+uint8_t scankeys()
+{
+  /* Source: https://github.com/FriesFlorian/keyawesome */
+}
+
 void loop()
 {
+  keycount=scankeys();
   // Only send KeyRelease if previously pressed to avoid sending
   // multiple keyRelease reports (that consume memory and bandwidth)
   if ( hasKeyPressed )
