@@ -1,6 +1,7 @@
 /*********************************************************************
  This code is for the Bluefruit nRF52 Feather and started off as the
  Adafruit nRF52 Bluefruit LE HID example. Much mutated since then.
+ See License file for details.
 *********************************************************************/
 #include <bluefruit.h>
 
@@ -36,39 +37,28 @@ uint32_t pins_write [] = { /* P31(VBAT ADC) is separator */
     GPIO(13), GPIO(14), GPIO( 8), GPIO( 6), GPIO(20),
 };
 
-void init_keymatrix()
-{
-  /* Source: https://gist.github.com/mitchtech/2865219 */
-  int32_t i=0;
+// Key queue: 6 at most
+char keys[6]="";
+uint8_t keycount=0;
 
-  // Read pins in Input mode, and High state
-  for(;i<(sizeof(pins_read)/sizeof(pins_read[0]));++i){
-    pinMode(pins_read[i], INPUT);
-    // Enable internal pull-ups
-    digitalWrite(pins_read[i], 1);
-  }
-
-  for(i=0;i<(sizeof(pins_write)/sizeof(pins_write[0]));++i){
-    pinMode(pins_write[i], OUTPUT);
-  }
-}
+// Battery level indicator
+uint8_t level=100;
+uint8_t delta=-1;
 
 void setup()
 {
+  // Key matrix init
   init_keymatrix();
+
   Serial.begin(115200);
 
-  Serial.println("Bluefruit52 HID Keyboard Example");
-  Serial.println("--------------------------------\n");
+  Serial.println("Debug log");
+  Serial.println("---------");
 
-  Serial.println();
-  Serial.println("Go to your phone's Bluetooth settings to pair your device");
-  Serial.println("then open an application that accepts keyboard input");
-
-  Serial.println();
-  Serial.println("Enter the character(s) to send:");
+  Serial.println("Initialization START");
   Serial.println();
 
+  // Bluetooth stack init
   Bluefruit.begin();
   // Set max power. Accepted values are: -40, -30, -20, -16, -12, -8, -4, 0, 4
   Bluefruit.setTxPower(-20);
@@ -96,43 +86,9 @@ void setup()
 
   // Set up and start advertising
   startAdv();
-}
 
-void startAdv(void)
-{
-  // Advertising packet
-  Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
-  Bluefruit.Advertising.addTxPower();
-  Bluefruit.Advertising.addAppearance(BLE_APPEARANCE_HID_KEYBOARD);
-
-  // Include BLE HID service
-  Bluefruit.Advertising.addService(blehid);
-
-  // There is enough room for the dev name in the advertising packet
-  Bluefruit.Advertising.addName();
-
-  /* Start Advertising
-   * - Enable auto advertising if disconnected
-   * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
-   * - Timeout for fast mode is 30 seconds
-   * - Start(timeout) with timeout = 0 will advertise forever (until connected)
-   *
-   * For recommended advertising interval
-   * https://developer.apple.com/library/content/qa/qa1931/_index.html
-   */
-  Bluefruit.Advertising.restartOnDisconnect(true);
-  Bluefruit.Advertising.setInterval(32, 244);    // in unit of 0.625 ms
-  Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
-  Bluefruit.Advertising.start(30);               // 0 = Don't stop advertising after n seconds
-}
-
-char keys[6]="";
-uint8_t keycount=0;
-
-/* Function to scan key matrix and return the keys pressed */
-uint8_t scankeys()
-{
-  /* Source: https://github.com/FriesFlorian/keyawesome */
+  Serial.println("Initialization END");
+  Serial.println();
 }
 
 void loop()
